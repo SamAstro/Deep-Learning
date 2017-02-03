@@ -4,6 +4,11 @@ This is the repository of all the projects I will carry out during [Udacity Deep
 Learning Nanodegree Foundation
 Program](https://www.udacity.com/course/deep-learning-nanodegree-foundation--nd101)
 
+## Table of contents
+### Project 1 -- your first neural network
+Using only numpy, we build a neural network from scratch to carry out
+predictions on daily bike rental ridership.
+
 ## Prerequisites
 You need:
 
@@ -17,20 +22,6 @@ You need:
 To run the notebook, you need Jupyter installed with a Python 3.x kernel. Then
 just run 
 ```
-> jupyter-notebook-3.x *notebook*.ipynb
+> jupyter-notebook-3.x notebook_name.ipynb
 ```
-in the correct directory.
-
-## Motivation
-
-This notebook is intended as a tutorial. 
-
-## License
-
-Files shared under the MIT License.
-
-## Other links
-[link](https://www.kaggle.com/uciml/human-activity-recognition-with-smartphones)
-to the Kaggle 'human activity recognition with smartphones' database
-0
-
+in the corresponding directory.
