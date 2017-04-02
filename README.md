@@ -25,6 +25,23 @@ My network is as follows:
 Epoch: 20
 Batch size = 128
 
+### Project 3 -- TV Script Generation
+In this project, we'll generate our own
+[Simpsons](https://en.wikipedia.org/wiki/The_Simpsons) TV scripts using RNNs.
+We'll be using part of the [Simpsons
+dataset](https://www.kaggle.com/wcukierski/the-simpsons-by-the-data) of scripts
+from 27 seasons.  The Neural Network we'll build will generate a new TV script
+for a scene at [Moe's Tavern](https://simpsonswiki.com/wiki/Moe's_Tavern).
+
+My hyperparameters:
+* num_epochs = 100  
+* batch_size = 64  
+* rnn_size = 512  
+* seq_length = 16  
+* learning_rate = 0.001  
+* show_every_n_batches = 128
+
+
 ## Prerequisites
 You need:
 
