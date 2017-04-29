@@ -41,6 +41,21 @@ My hyperparameters:
 * learning_rate = 0.001  
 * show_every_n_batches = 128
 
+### Project 4 -- Language Translation
+In this project, you’re going to take a peek into the realm of neural network
+machine translation. You’ll be training a sequence to sequence model on a
+dataset of English and French sentences that can translate new sentences from
+English to French.
+
+My hyperparameters:
+* epochs = 4  
+* batch_size = 256  
+* rnn_size = 128  
+* num_layers = 2  
+* encoding_embedding_size = 50  
+* decoding_embedding_size = 50  
+* learning_rate = 0.005  
+* keep_probability = 0.7
 
 ## Prerequisites
 You need:
