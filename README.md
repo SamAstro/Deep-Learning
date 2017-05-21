@@ -22,8 +22,9 @@ My network is as follows:
 * 3 fully connected layers with 0.5 dropout
 * 1 output layer
 
-Epoch: 20
-Batch size = 128
+My hyperparameters:
+* Epoch: 20
+* Batch size = 128
 
 ### Project 3 -- TV Script Generation
 In this project, we'll generate our own
@@ -56,6 +57,26 @@ My hyperparameters:
 * decoding_embedding_size = 50  
 * learning_rate = 0.005  
 * keep_probability = 0.7
+
+### Project 5 -- Face Generation
+In this project, you'll use generative adversarial networks to generate new
+images of faces.
+
+My hyperparameters:
+* MNIST
+    + batch_size = 128
+    + z_dim = 128
+    + learning_rate = 0.0002
+    + beta1 = 0.5
+    + epochs = 2
+
+* CelebA
+    + batch_size = 128
+    + z_dim = 100
+    + learning_rate = 0.0001
+    + beta1 = 0.5
+    + epochs = 1
+
 
 ## Prerequisites
 You need:
