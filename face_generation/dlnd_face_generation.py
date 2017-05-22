@@ -33,7 +33,7 @@ helper.download_extract('celeba', data_dir)
 # ### MNIST
 # As you're aware, the [MNIST](http://yann.lecun.com/exdb/mnist/) dataset contains images of handwritten digits. You can view the first number of examples by changing `show_n_images`. 
 
-# In[3]:
+# In[2]:
 
 show_n_images = 50
 
@@ -46,13 +46,13 @@ from glob import glob
 from matplotlib import pyplot
 
 mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'mnist/*.jpg'))[:show_n_images], 28, 28, 'L')
-pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
+_ = pyplot.imshow(helper.images_square_grid(mnist_images, 'L'), cmap='gray')
 
 
 # ### CelebA
 # The [CelebFaces Attributes Dataset (CelebA)](http://mmlab.ie.cuhk.edu.hk/projects/CelebA.html) dataset contains over 200,000 celebrity images with annotations.  Since you're going to be generating faces, you won't need the annotations.  You can view the first number of examples by changing `show_n_images`.
 
-# In[6]:
+# In[3]:
 
 show_n_images = 42
 
@@ -60,7 +60,7 @@ show_n_images = 42
 DON'T MODIFY ANYTHING IN THIS CELL
 """
 mnist_images = helper.get_batch(glob(os.path.join(data_dir, 'img_align_celeba/*.jpg'))[:show_n_images], 28, 28, 'RGB')
-pyplot.imshow(helper.images_square_grid(mnist_images, 'RGB'))
+_ = pyplot.imshow(helper.images_square_grid(mnist_images, 'RGB'))
 
 
 # ## Preprocess the Data
@@ -79,7 +79,7 @@ pyplot.imshow(helper.images_square_grid(mnist_images, 'RGB'))
 # ### Check the Version of TensorFlow and Access to GPU
 # This will check to make sure you have the correct version of TensorFlow and access to a GPU
 
-# In[7]:
+# In[4]:
 
 """
 DON'T MODIFY ANYTHING IN THIS CELL
@@ -107,7 +107,7 @@ else:
 # 
 # Return the placeholders in the following the tuple (tensor of real input images, tensor of z data)
 
-# In[54]:
+# In[5]:
 
 import problem_unittests as tests
 
@@ -136,7 +136,10 @@ tests.test_model_inputs(model_inputs)
 # ### Discriminator
 # Implement `discriminator` to create a discriminator neural network that discriminates on `images`.  This function should be able to reuse the variabes in the neural network.  Use [`tf.variable_scope`](https://www.tensorflow.org/api_docs/python/tf/variable_scope) with a scope name of "discriminator" to allow the variables to be reused.  The function should return a tuple of (tensor output of the generator, tensor logits of the generator).
 
-# In[55]:
+# #### Notes
+# Architecture inspired by this website [GAN by Example using Keras on Tensorflow Backend](https://medium.com/towards-data-science/gan-by-example-using-keras-on-tensorflow-backend-1a6d515a60d0) 
+
+# In[7]:
 
 def discriminator(images, reuse=False):
     """
@@ -149,23 +152,33 @@ def discriminator(images, reuse=False):
     # See DCGAN -- Cell 10
     with tf.variable_scope('discriminator', reuse=reuse):
         alpha=0.2
-        # Input layer is 32x32x3
+        dropout = 0.4
+        # Input layer is 28x28x3
         x1 = tf.layers.conv2d(images, 64, 5, strides=2, padding='same')
         relu1 = tf.maximum(alpha * x1, x1)
-        # 16x16x64
+        relu1 = tf.layers.dropout(relu1,dropout)
+        # 14x14x64
         
         x2 = tf.layers.conv2d(relu1, 128, 5, strides=2, padding='same')
         bn2 = tf.layers.batch_normalization(x2, training=True)
         relu2 = tf.maximum(alpha * bn2, bn2)
-        # 8x8x128
+        relu2 = tf.layers.dropout(relu2,dropout)
+        # 7x7x128
         
         x3 = tf.layers.conv2d(relu2, 256, 5, strides=2, padding='same')
         bn3 = tf.layers.batch_normalization(x3, training=True)
         relu3 = tf.maximum(alpha * bn3, bn3)
+        relu3 = tf.layers.dropout(relu3,dropout)
         # 4x4x256
+        
+        x4 = tf.layers.conv2d(relu3, 512, 5, strides=1, padding='same')
+        bn4 = tf.layers.batch_normalization(x4, training=True)
+        relu4 = tf.maximum(alpha * bn4, bn4)
+        relu4 = tf.layers.dropout(relu4,dropout)
+        # 4x4x512
 
         # Flatten it
-        flat = tf.reshape(relu3, (-1, 4*4*256))
+        flat = tf.reshape(relu3, (-1, 4*4*512))
         logits = tf.layers.dense(flat, 1)
         out = tf.sigmoid(logits)
         
@@ -180,7 +193,7 @@ tests.test_discriminator(discriminator, tf)
 # ### Generator
 # Implement `generator` to generate an image using `z`. This function should be able to reuse the variabes in the neural network.  Use [`tf.variable_scope`](https://www.tensorflow.org/api_docs/python/tf/variable_scope) with a scope name of "generator" to allow the variables to be reused. The function should return the generated 28 x 28 x `image_channels` images.
 
-# In[102]:
+# In[20]:
 
 def generator(z, image_channels, is_train=True):
     """
@@ -194,26 +207,33 @@ def generator(z, image_channels, is_train=True):
     # See DCGAN -- Cell 9
     with tf.variable_scope('generator', reuse= not is_train):
         alpha = 0.2
+        dropout=0.4
         # First fully connected layer
-        x1 = tf.layers.dense(z, 7*7*512)
+        x1 = tf.layers.dense(z, 7*7*256)
         # Reshape it to start the convolutional stack
-        x1 = tf.reshape(x1, (-1, 7, 7, 512))
+        x1 = tf.reshape(x1, (-1, 7, 7, 256))
         x1 = tf.layers.batch_normalization(x1, training=is_train)
         x1 = tf.maximum(alpha * x1, x1)
+        x1 = tf.layers.dropout(x1,dropout)
         #print(x1.shape)
         
-        x2 = tf.layers.conv2d_transpose(x1, 256, 5, strides=2, padding='same')
+        x2 = tf.layers.conv2d_transpose(x1, 128, (5,5), strides=2, padding='same')
         x2 = tf.layers.batch_normalization(x2, training=is_train)
         x2 = tf.maximum(alpha * x2, x2)
         #print(x2.shape)
         
-        x3 = tf.layers.conv2d_transpose(x2, 128, 5, strides=2, padding='same')
+        x3 = tf.layers.conv2d_transpose(x2, 64, (5,5), strides=2, padding='same')
         x3 = tf.layers.batch_normalization(x3, training=is_train)
         x3 = tf.maximum(alpha * x3, x3)
         #print(x3.shape)
         
+        x4 = tf.layers.conv2d_transpose(x3, 32, (5,5), strides=1, padding='same')
+        x4 = tf.layers.batch_normalization(x4, training=is_train)
+        x4 = tf.maximum(alpha * x4, x4)
+        #print(x4.shape)
+        
         # Output layer
-        logits = tf.layers.conv2d_transpose(x3, image_channels, 5, strides=1, padding='same')
+        logits = tf.layers.conv2d_transpose(x4, image_channels, (5,5), strides=1, padding='same')
         #print(logits.shape)
         
         out = tf.tanh(logits)
@@ -232,7 +252,12 @@ tests.test_generator(generator, tf)
 # - `discriminator(images, reuse=False)`
 # - `generator(z, image_channels, is_train=True)`
 
-# In[103]:
+# In[21]:
+
+import numpy as np
+
+
+# In[22]:
 
 def model_loss(input_real, input_z, image_channels):
     """
@@ -249,7 +274,7 @@ def model_loss(input_real, input_z, image_channels):
     d_model_fake, d_logits_fake = discriminator(g_model, reuse=True)
 
     d_loss_real = tf.reduce_mean(
-        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real, labels=tf.ones_like(d_model_real)))
+        tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_real, labels=tf.ones_like(d_model_real)*np.random.uniform(0.7, 1.2)))
     d_loss_fake = tf.reduce_mean(
         tf.nn.sigmoid_cross_entropy_with_logits(logits=d_logits_fake, labels=tf.zeros_like(d_model_fake)))
     g_loss = tf.reduce_mean(
@@ -269,7 +294,7 @@ tests.test_model_loss(model_loss)
 # ### Optimization
 # Implement `model_opt` to create the optimization operations for the GANs. Use [`tf.trainable_variables`](https://www.tensorflow.org/api_docs/python/tf/trainable_variables) to get all the trainable variables.  Filter the variables with names that are in the discriminator and generator scope names.  The function should return a tuple of (discriminator training operation, generator training operation).
 
-# In[104]:
+# In[23]:
 
 def model_opt(d_loss, g_loss, learning_rate, beta1):
     """
@@ -306,7 +331,7 @@ tests.test_model_opt(model_opt, tf)
 # ### Show Output
 # Use this function to show the current output of the generator during training. It will help you determine how well the GANs is training.
 
-# In[105]:
+# In[24]:
 
 """
 DON'T MODIFY ANYTHING IN THIS CELL
@@ -343,7 +368,7 @@ def show_generator_output(sess, n_images, input_z, image_channels, image_mode):
 # 
 # Use the `show_generator_output` to show `generator` output while you train. Running `show_generator_output` for every batch will drastically increase training time and increase the size of the notebook.  It's recommended to print the `generator` output every 100 batches.
 
-# In[119]:
+# In[25]:
 
 def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, data_shape, data_image_mode):
     """
@@ -401,17 +426,17 @@ def train(epoch_count, batch_size, z_dim, learning_rate, beta1, get_batches, dat
                           "Generator Loss: {:.4f}".format(train_loss_g))
 
                 if steps % 100 == 0:
-                    show_generator_output(sess, 42, input_z, image_channels, data_image_mode)
+                    show_generator_output(sess, 20, input_z, image_channels, data_image_mode)
 
 
 # ### MNIST
 # Test your GANs architecture on MNIST.  After 2 epochs, the GANs should be able to generate images that look like handwritten digits.  Make sure the loss of the generator is lower than the loss of the discriminator or close to 0.
 
-# In[121]:
+# In[26]:
 
-batch_size = 128
-z_dim = 128
-learning_rate = 0.0002
+batch_size = 32
+z_dim = 100
+learning_rate = 0.001
 beta1 = 0.5
 
 
@@ -429,11 +454,11 @@ with tf.Graph().as_default():
 # ### CelebA
 # Run your GANs on CelebA.  It will take around 20 minutes on the average GPU to run one epoch.  You can run the whole epoch or stop when it starts to generate realistic faces.
 
-# In[122]:
+# In[27]:
 
-batch_size = 128
+batch_size = 32
 z_dim = 100
-learning_rate = 0.0001
+learning_rate = 0.001
 beta1 = 0.5
 
 
@@ -447,9 +472,6 @@ with tf.Graph().as_default():
     train(epochs, batch_size, z_dim, learning_rate, beta1, celeba_dataset.get_batches,
           celeba_dataset.shape, celeba_dataset.image_mode)
 
-
-# #### Notes
-# My _generator loss_ is higher than my _discriminator loss_ and strongly variable --> I would need to play with my hyperparameters to improve all that.
 
 # ### Submitting This Project
 # When submitting this project, make sure to run all the cells before saving the notebook. Save the notebook file as "dlnd_face_generation.ipynb" and save it as a HTML file under "File" -> "Download as". Include the "helper.py" and "problem_unittests.py" files in your submission.
